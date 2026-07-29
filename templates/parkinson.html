@@ -1,0 +1,264 @@
+{% extends "basee.html" %}
+{% block title %}Parkinson Test{% endblock %}
+
+{% block content %}
+<style>
+  body {
+    background-color: #1e1e2f;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #f8fafc;
+  }
+
+  .info-box {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 40px;
+    margin-top: 30px;
+  }
+
+  .info {
+    background: linear-gradient(135deg, #9333ea, #ec4899);
+    padding: 20px 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(147, 51, 234, 0.3);
+    text-align: center;
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+    transition: transform 0.3s ease;
+  }
+
+  .info:hover {
+    transform: translateY(-5px);
+  }
+
+  .info strong {
+    display: block;
+    font-size: 24px;
+    margin-top: 10px;
+    color: #fff;
+  }
+
+  .form-wrapper {
+    background: #2a2e3d;
+    padding: 40px;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 550px;
+    margin: auto;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.8s ease-in-out;
+  }
+
+  .form-wrapper h2 {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    background: linear-gradient(to right, #9333ea, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .form-wrapper label {
+    font-size: 14px;
+    margin-bottom: 8px;
+    display: block;
+    color: #cbd5e1;
+  }
+
+  .form-wrapper input[type="text"],
+  .form-wrapper input[type="file"],
+  .form-wrapper select {
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 20px;
+    background: #374151;
+    border: 1px solid #4b5563;
+    border-radius: 10px;
+    color: #f1f5f9;
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
+
+  .form-wrapper input:focus,
+  .form-wrapper select:focus {
+    outline: none;
+    border-color: #9333ea;
+    box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.4);
+  }
+
+  .btns {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btns button,
+  .btns a {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: transform 0.3s ease, background 0.3s;
+  }
+
+  .btns button {
+    background: #9333ea;
+    color: white;
+    border: none;
+  }
+
+  .btns button:hover {
+    background: #7c3aed;
+    transform: scale(1.05);
+  }
+
+  .btns a {
+    background: #ef4444;
+    color: white;
+  }
+
+  .btns a:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+  }
+
+  .result-box {
+    margin-top: 40px;
+    text-align: center;
+    background: #334155;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
+  }
+
+  .result-box img {
+    width: 120px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+
+  .result-box h3 {
+    color: #ec4899;
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+
+  .result-box h2 {
+    font-size: 24px;
+    color: #9333ea;
+  }
+
+  .result-box p {
+    color: #cbd5e1;
+    font-size: 16px;
+    margin-top: 8px;
+  }
+
+  .print-btn {
+    margin-top: 20px;
+    background: #10b981;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .print-btn:hover {
+    background: #059669;
+  }
+
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    .result-box, .result-box * {
+      visibility: visible;
+    }
+    .result-box {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: white;
+      color: black;
+    }
+  }
+
+  @keyframes fadeIn {
+    from {opacity: 0; transform: translateY(20px);}
+    to {opacity: 1; transform: translateY(0);}
+  }
+</style>
+
+<!-- 🧠 Test Form -->
+<div class="info-box">
+  <div class="info">
+    📅 <span>Date:</span>
+    <strong>{{ current_date }}</strong>
+  </div>
+  <div class="info">
+    🧪 <span>Tests Today:</span>
+    <strong>{{ test_count }}</strong>
+  </div>
+</div>
+
+<div class="form-wrapper">
+  <h2>🧠 Parkinson Test</h2>
+  <form action="/detect_parkinson" method="POST" enctype="multipart/form-data">
+    <label>First Name</label>
+    <input type="text" name="first_name" required value="{{ first_name or '' }}">
+
+    <label>Last Name</label>
+    <input type="text" name="last_name" required value="{{ last_name or '' }}">
+
+    <label>Type de test</label>
+    <select name="testType" required>
+      <option value="">-- Sélectionner --</option>
+      <option value="MRI" {% if test_type == 'MRI' %}selected{% endif %}>🧠 IRM cérébrale</option>
+      <option value="Drawing" {% if test_type == 'Drawing' %}selected{% endif %}>✍️ Dessin à main levée</option>
+    </select>
+
+    <label>Upload Image</label>
+    <input type="file" name="file" accept="image/*" required>
+
+    <div class="btns">
+      <button type="submit" name="action" value="detect">🚀 Detect</button>
+      <a href="{{ url_for('parkinson_page') }}">❌ Clear</a>
+    </div>
+  </form>
+
+  {% if prediction %}
+  <div class="result-box" id="result-box">
+    {% if image_url %}
+    <img src="{{ url_for('static', filename=image_url) }}" alt="Test Image">
+    {% endif %}
+
+    <h3>🧠 Classification Result:</h3>
+    <h2>{{ prediction }}</h2>
+
+    {% if test_type == "MRI" %}
+    <p><strong>🧪 Type de test :</strong> IRM cérébrale</p>
+    {% elif test_type == "Drawing" %}
+    <p><strong>🧪 Type de test :</strong> Dessin à main levée</p>
+    {% endif %}
+
+    <p>
+      {{ first_name }} {{ last_name }}
+      {% if "normal" in prediction|lower or "healthy" in prediction|lower %}
+      is <strong style="color:#10b981;">not</strong> affected by Parkinson's disease.
+      {% else %}
+      is <strong style="color:#ef4444;">affected</strong> by Parkinson's disease.
+      {% endif %}
+    </p>
+
+    <button class="print-btn" onclick="window.print()">🖨️ Imprimer</button>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

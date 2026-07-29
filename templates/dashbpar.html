@@ -1,0 +1,220 @@
+{% extends "basee.html" %}
+
+{% block title %}Parkinson Smart Dashboard{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    body {
+        background-color: #121212;
+        --card-bg: #1e293b;
+        --text-main: #e0e0e0;
+        --text-muted: #94a3b8;
+        --highlight-color: #ff4081;
+        --shadow: 0 0 35px rgba(0, 0, 0, 0.5);
+        --card-hover-shadow: 0 0 80px rgba(255, 255, 255, 0.3);
+    }
+
+    h1 {
+        font-size: 50px;
+        font-weight: 800;
+        margin-bottom: 50px;
+        color: var(--text-main);
+        text-shadow: 0 0 30px rgba(255, 64, 129, 0.5), 0 0 50px rgba(255, 64, 129, 0.7);
+        animation: glowText 3.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes glowText {
+        from { text-shadow: 0 0 40px #ff4081, 0 0 60px #ff4081, 0 0 80px #ff4081; }
+        to   { text-shadow: 0 0 50px #ff4081, 0 0 80px #ff4081, 0 0 120px #ff4081; }
+    }
+
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 40px;
+        margin-bottom: 80px;
+    }
+
+    .card {
+        color: white;
+        border-radius: 20px;
+        padding: 35px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 35px rgba(0, 0, 0, 0.6);
+        border: 2px solid transparent;
+        transition: 0.4s ease;
+        animation: fadeInUp 0.8s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-10px);
+        box-shadow: var(--card-hover-shadow);
+        border-color: var(--highlight-color);
+    }
+
+    .card h3 {
+        font-size: 20px;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 15px;
+        letter-spacing: 1.5px;
+    }
+
+    .card span {
+        font-size: 42px;
+        font-weight: bold;
+        color: white;
+    }
+
+    .card .icon {
+        position: absolute;
+        top: -25px;
+        right: -30px;
+        font-size: 100px;
+        opacity: 0.1;
+        transform: rotate(-15deg);
+    }
+
+    .card-blue {
+        background: linear-gradient(135deg, #3b82f6, #1e40af);
+        border-color: #3b82f6;
+    }
+
+    .card-green {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        border-color: #22c55e;
+    }
+
+    .card-red {
+        background: linear-gradient(135deg, #ef4444, #e11d48);
+        border-color: #ef4444;
+    }
+
+    .charts-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+        gap: 50px;
+        margin-bottom: 60px;
+    }
+
+    .chart-box {
+        background: var(--card-bg);
+        padding: 28px;
+        border-radius: 22px;
+        border: 2px solid transparent;
+        box-shadow: 0 0 35px rgba(0, 0, 0, 0.3);
+        transition: 0.4s ease, box-shadow 0.4s ease;
+        animation: fadeInUp 0.8s ease;
+    }
+
+    .chart-box:hover {
+        border-image: linear-gradient(to right, #ff4081, #9333ea) 1;
+        box-shadow: 0 0 40px rgba(255, 64, 129, 0.4);
+    }
+
+    .chart-box h3 {
+        text-align: center;
+        margin-bottom: 25px;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+        .cards, .charts-container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>🧠 Parkinson Disease Detection Dashboard</h1>
+
+<div class="cards">
+    <div class="card card-blue">
+        <h3>Total Patients</h3>
+        <span>{{ total }}</span>
+        <i class="fas fa-users icon"></i>
+    </div>
+    <div class="card card-green">
+        <h3>Healthy Patients</h3>
+        <span>{{ healthy }}</span>
+        <i class="fas fa-heartbeat icon"></i>
+    </div>
+    <div class="card card-red">
+        <h3>Parkinson Cases</h3>
+        <span>{{ sick }}</span>
+        <i class="fas fa-brain icon"></i>
+    </div>
+</div>
+
+<div class="charts-container">
+    <div class="chart-box">
+        <h3>📊 Patients by Class</h3>
+        <canvas id="barChart"></canvas>
+    </div>
+    <div class="chart-box">
+        <h3>📈 Cases Per Day</h3>
+        <canvas id="lineChart"></canvas>
+    </div>
+</div>
+
+<script>
+const barLabels = {{ class_labels | tojson }};
+const barData = {{ class_values | tojson }};
+const lineLabels = {{ date_labels | tojson }};
+const lineData = {{ date_values | tojson }};
+
+new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+        labels: barLabels,
+        datasets: [{
+            label: 'Patients',
+            data: barData,
+            backgroundColor: ['#3b82f6', '#22c55e', '#ef4444', '#facc15'],
+            borderRadius: 12
+        }]
+    },
+    options: {
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { ticks: { color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+            y: { beginAtZero: true, ticks: { color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+        }
+    }
+});
+
+new Chart(document.getElementById('lineChart'), {
+    type: 'line',
+    data: {
+        labels: lineLabels,
+        datasets: [{
+            label: 'Tests',
+            data: lineData,
+            fill: true,
+            backgroundColor: 'rgba(59,130,246,0.2)',
+            borderColor: '#3b82f6',
+            tension: 0.4,
+            borderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 8
+        }]
+    },
+    options: {
+        plugins: { legend: { labels: { color: '#ccc' } } },
+        scales: {
+            x: { ticks: { color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+            y: { beginAtZero: true, ticks: { color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+        }
+    }
+});
+</script>
+{% endblock %}

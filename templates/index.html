@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Neuro Disease App</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap">
+  <style>
+   body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background: url('/static/brain.webp') no-repeat center center fixed;
+      background-size: cover;
+      backdrop-filter: blur(3px);
+      filter: brightness(0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+
+    .form-container {
+      background: rgba(30, 30, 40, 0.85);
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(124, 58, 237, 0.3);
+      backdrop-filter: blur(4px);
+      text-align: center;
+      width: 320px;
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #e0e7ff;
+    }
+
+    select, button {
+      padding: 12px 14px;
+      width: 100%;
+      margin-top: 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    select {
+      background-color: #312e81;
+      color: #f8fafc;
+    }
+
+    button {
+      background: #7c3aed;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #8b5cf6;
+      box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+    }
+
+    @keyframes waveBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>🧠 Welcome to Neuro Disease App</h2>
+    <form id="diseaseForm">
+      <select name="disease" id="diseaseSelect" required>
+        <option value="">Select a disease</option>
+        <option value="alzheimer">Alzheimer Disease</option>
+        <option value="parkinson">Parkinson Disease</option>
+      </select>
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("diseaseForm").addEventListener("submit", function (event) {
+      event.preventDefault();
+      const selected = document.getElementById("diseaseSelect").value;
+      if (selected === "alzheimer") {
+        window.location.href = "/dashboard";
+      } else if (selected === "parkinson") {
+        window.location.href = "/dashboardparkinson";
+      }
+    });
+  </script>
+</body>
+</html>

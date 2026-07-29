@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Records{% endblock %}
+
+{% block content %}
+<style>
+  body {
+    background-color: #1e1e2f;
+    color: #f8fafc;
+  }
+
+  .container {
+    padding: 30px;
+    animation: fadeIn 0.8s ease-in-out;
+  }
+
+  h2 {
+    font-size: 28px;
+    color: #fff;
+    margin-bottom: 20px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #2a2e3d;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  th {
+    background: linear-gradient(145deg, #9333ea, #f43f5e);
+    color: white;
+    padding: 14px;
+    text-align: center;
+  }
+
+  td {
+    padding: 14px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  tr:hover {
+    background-color: rgba(255,255,255,0.04);
+  }
+
+  img.thumb {
+    width: 60px;
+    border-radius: 6px;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+  }
+
+  img.thumb:hover {
+    transform: scale(1.1);
+  }
+
+  .status-sick {
+    background-color: #e74c3c;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+  }
+
+  .status-healthy {
+    background-color: #2ecc71;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+  }
+
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    padding-top: 40px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.8);
+  }
+
+  .modal-content {
+    background-color: #2a2e3d;
+    margin: auto;
+    padding: 30px;
+    border-radius: 12px;
+    width: 80%;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+    display: flex;
+    gap: 30px;
+    color: #fff;
+  }
+
+  .close {
+    position: absolute;
+    top: 12px;
+    right: 30px;
+    font-size: 34px;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  #imageModal img {
+    max-width: 100%;
+    border-radius: 10px;
+  }
+
+  .filters label, .filters button {
+    display: block;
+    margin-top: 12px;
+  }
+
+  .filters input[type="range"] {
+    width: 100%;
+  }
+
+  .filters button {
+    padding: 8px 14px;
+    background: #ec4899;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .image-actions {
+    margin-top: 12px;
+  }
+
+  .image-actions button {
+    padding: 10px 16px;
+    margin-right: 10px;
+    background: #9333ea;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .image-actions button:hover {
+    background: #ec4899;
+  }
+</style>
+
+<div class="container">
+  <h2>🧠 Patient Records</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Full Name</th>
+        <th>MRI Image</th>
+        <th>Status</th>
+        <th>Classification</th>
+        <th>Medical Record</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in patients %}
+      <tr>
+        <td>{{ p.name }}</td>
+        <td><img src="{{ url_for('static', filename=p.image) }}" class="thumb" onclick="openModal('{{ url_for('static', filename=p.image) }}')"></td>
+        <td>{% if p.status == 'sick' %}<span class="status-sick">Sick</span>{% else %}<span class="status-healthy">Healthy</span>{% endif %}</td>
+        <td>{{ p.class_name }}</td>
+        <td><i class="fa fa-file" style="color:#c084fc; cursor:pointer;" onclick="showPatientModal('{{ p.name }}', '{{ p.image }}', '{{ p.date }}', '{{ p.status }}', '{{ p.class_name }}')"></i></td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_patient', index=loop.index0) }}" style="display:inline;">
+            <button type="submit" style="background:none; border:none;" onclick="return confirm('Are you sure?');">
+              <i class="fa fa-trash" style="color:#f87171;"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- 🧠 Modal Image Viewer -->
+<div id="imageModal" class="modal">
+  <span class="close" onclick="closeModal()">&times;</span>
+  <div class="modal-content">
+    <div class="filters">
+      <h3>🖼️ Ajuster l’image</h3>
+      <label>Brightness</label>
+      <input type="range" id="brightness" min="0" max="2" step="0.1" value="1">
+      <button onclick="applyBrightness()">Appliquer</button>
+      <label>Contrast</label>
+      <input type="range" id="contrast" min="0" max="2" step="0.1" value="1">
+      <button onclick="applyContrast()">Appliquer</button>
+      <button onclick="invertColors()">Inverser</button>
+      <button onclick="resetImage()">Réinitialiser</button>
+      <div class="image-actions">
+        <button onclick="visualizeAffectedRegions()">🔥 Visualiser les Régions Affectées</button>
+      </div>
+    </div>
+    <div>
+      <img id="mriImage" src="" alt="MRI Image">
+    </div>
+  </div>
+</div>
+
+<!-- 📁 Modal Patient Medical Record -->
+<div id="patientModal" class="modal" onclick="this.style.display='none'">
+</div>
+
+<script>
+function openModal(imageSrc) {
+  document.getElementById("mriImage").src = imageSrc;
+  document.getElementById("imageModal").style.display = "block";
+}
+function closeModal() {
+  document.getElementById("mriImage").style.filter = "";
+  document.getElementById("brightness").value = 1;
+  document.getElementById("contrast").value = 1;
+  document.getElementById("imageModal").style.display = "none";
+}
+function applyBrightness() {
+  const val = document.getElementById("brightness").value;
+  document.getElementById("mriImage").style.filter = `brightness(${val})`;
+}
+function applyContrast() {
+  const val = document.getElementById("contrast").value;
+  const cur = document.getElementById("mriImage").style.filter || "";
+  document.getElementById("mriImage").style.filter = `${cur} contrast(${val})`;
+}
+function invertColors() {
+  const cur = document.getElementById("mriImage").style.filter || "";
+  document.getElementById("mriImage").style.filter = `${cur} invert(1)`;
+}
+function resetImage() {
+  document.getElementById("mriImage").style.filter = "";
+  document.getElementById("brightness").value = 1;
+  document.getElementById("contrast").value = 1;
+}
+function visualizeAffectedRegions() {
+  const imgSrc = document.getElementById("mriImage").src;
+  fetch('/detect_regions_alzheimer', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image_url: imgSrc })
+  })
+  .then(response => response.blob())
+  .then(blob => {
+    const url = URL.createObjectURL(blob);
+    const win = window.open();
+    win.document.write(`<title>Régions Affectées</title><img src="${url}" style="max-width:100%;">`);
+  })
+  .catch(err => {
+    alert("Erreur lors de la détection des régions.");
+    console.error(err);
+  });
+}
+
+function showPatientModal(name, image, date, status, className) {
+  const modalContent = `
+    <div style="background:#2a2e3d; padding:30px; border-radius:10px; color:white; max-width:600px; margin:auto;">
+      <h2 style="color:#c084fc;">🧾 Dossier Médical</h2>
+      <p><strong>Nom :</strong> ${name}</p>
+      <p><strong>Date d'enregistrement :</strong> ${date}</p>
+      <p><strong>État :</strong> ${status === 'sick' ? '<span style="color:#ef4444">Malade</span>' : '<span style="color:#10b981">Sain</span>'}</p>
+      <p><strong>Classe :</strong> ${className}</p>
+      <img src="/static/${image}" alt="IRM" style="max-width:100%; margin-top:20px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.4)">
+      <div style="text-align:center; margin-top:20px;">
+        <button onclick="document.getElementById('patientModal').style.display='none'" style="padding:10px 20px; background:#9333ea; border:none; color:white; border-radius:6px; cursor:pointer;">Fermer</button>
+      </div>
+    </div>
+  `;
+  document.getElementById("patientModal").innerHTML = modalContent;
+  document.getElementById("patientModal").style.display = "block";
+}
+</script>
+{% endblock %}

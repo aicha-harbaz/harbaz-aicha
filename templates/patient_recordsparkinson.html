@@ -1,0 +1,293 @@
+{% extends "basee.html" %}
+
+{% block title %}Parkinson Patient Records{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background-color: #1e1e2f;
+        color: #f8fafc;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .container {
+        padding: 30px;
+        animation: fadeIn 0.8s ease-in-out;
+    }
+
+    h2 {
+        font-size: 28px;
+        color: #c084fc;
+        margin-bottom: 20px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #2a2e3d;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    th {
+        background: linear-gradient(135deg, #9333ea, #ec4899);
+        color: white;
+        padding: 14px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    td {
+        padding: 14px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    tr:hover {
+        background-color: rgba(255,255,255,0.04);
+    }
+
+    img.thumb {
+        width: 60px;
+        border-radius: 6px;
+        transition: transform 0.3s ease;
+        cursor: pointer;
+    }
+
+    img.thumb:hover {
+        transform: scale(1.1);
+    }
+
+    .status-sick {
+        background-color: #ef4444;
+        color: white;
+        padding: 6px 14px;
+        border-radius: 16px;
+        font-weight: bold;
+    }
+
+    .status-healthy {
+        background-color: #22c55e;
+        color: white;
+        padding: 6px 14px;
+        border-radius: 16px;
+        font-weight: bold;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        padding-top: 40px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.9);
+    }
+
+    .modal-content {
+        background-color: #2a2e3d;
+        margin: auto;
+        padding: 30px;
+        border-radius: 12px;
+        width: 80%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+        color: #fff;
+    }
+
+    .modal-content img {
+        max-width: 350px;
+        border-radius: 10px;
+        object-fit: contain;
+    }
+
+    .filters h3 {
+        color: #f472b6;
+        margin-bottom: 10px;
+    }
+
+    .filters label, .filters button {
+        display: block;
+        margin-top: 10px;
+    }
+
+    .filters input[type="range"] {
+        width: 100%;
+    }
+
+    .filters button {
+        padding: 8px 14px;
+        margin-top: 5px;
+        background: #9333ea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .close {
+        position: absolute;
+        top: 12px;
+        right: 30px;
+        font-size: 34px;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .actions i {
+        font-size: 18px;
+        margin: 0 5px;
+        cursor: pointer;
+    }
+
+    .modal-content-column {
+        flex-direction: column;
+        text-align: left;
+        gap: 14px;
+    }
+
+    input[type="text"] {
+        padding: 12px;
+        width: 300px;
+        border-radius: 8px;
+        border: none;
+        background: #374151;
+        color: white;
+    }
+
+    button[type="submit"] {
+        background: none;
+        border: none;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="container">
+    <h2>🧠 Parkinson Patient Records</h2>
+    <input type="text" placeholder="Search for patients..." />
+
+    <table>
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>MRI Image</th>
+                <th>Status</th>
+                <th>Classification</th>
+                <th>Medical Record</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in patients %}
+            <tr>
+                <td>{{ p.name }}</td>
+                <td><img src="{{ url_for('static', filename=p.image) }}" class="thumb" onclick="openModal('{{ url_for('static', filename=p.image) }}')"></td>
+                <td>
+                    {% if p.status == 'sick' %}
+                        <span class="status-sick">Sick</span>
+                    {% else %}
+                        <span class="status-healthy">Healthy</span>
+                    {% endif %}
+                </td>
+                <td>{{ p.class_name }}</td>
+                <td>
+                    <i class="fa fa-file" style="color:#f472b6" onclick="showPatientModal('{{ p.name }}', '{{ p.image }}', '{{ p.date }}', '{{ p.status }}', '{{ p.class_name }}')"></i>
+                </td>
+                <td class="actions">
+                    <form method="POST" action="{{ url_for('deletee_patient', index=loop.index0) }}">
+                        <button type="submit" onclick="return confirm('Are you sure?');">
+                            <i class="fa fa-trash" style="color:#f87171;"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="modal">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <div class="modal-content">
+        <div class="filters">
+            <h3>🖼️ Adjust MRI View</h3>
+            <label>Brightness</label>
+            <input type="range" id="brightness" min="0" max="2" step="0.1" value="1">
+            <button onclick="applyBrightness()">Apply</button>
+            <label>Contrast</label>
+            <input type="range" id="contrast" min="0" max="2" step="0.1" value="1">
+            <button onclick="applyContrast()">Apply</button>
+            <button onclick="invertColors()">Invert</button>
+            <button onclick="resetImage()">Reset</button>
+        </div>
+        <div>
+            <img id="mriImage" src="" alt="MRI Image">
+        </div>
+    </div>
+</div>
+
+<!-- Patient Modal -->
+<div id="patientModal" class="modal">
+    <span class="close" onclick="closePatientModal()">&times;</span>
+    <div class="modal-content modal-content-column">
+        <h2>🗂️ Medical Record</h2>
+        <p><strong>👤 Name:</strong> <span id="modalName"></span></p>
+        <p><strong>📅 Date:</strong> <span id="modalDate"></span></p>
+        <p><strong>🧠 Disease:</strong> Parkinson</p>
+        <img id="modalImage" src="" style="width:100%; max-width:300px; border-radius:10px;">
+        <p><strong>🩺 Status:</strong> <span id="modalStatus"></span></p>
+        <p><strong>📊 Classification:</strong> <span id="modalClass"></span></p>
+    </div>
+</div>
+
+<script>
+function openModal(imageSrc) {
+    document.getElementById("mriImage").src = imageSrc;
+    document.getElementById("imageModal").style.display = "block";
+}
+function closeModal() {
+    document.getElementById("imageModal").style.display = "none";
+}
+function applyBrightness() {
+    const val = document.getElementById("brightness").value;
+    document.getElementById("mriImage").style.filter = `brightness(${val})`;
+}
+function applyContrast() {
+    const val = document.getElementById("contrast").value;
+    const cur = document.getElementById("mriImage").style.filter;
+    document.getElementById("mriImage").style.filter = `${cur} contrast(${val})`;
+}
+function invertColors() {
+    const cur = document.getElementById("mriImage").style.filter;
+    document.getElementById("mriImage").style.filter = `${cur} invert(1)`;
+}
+function resetImage() {
+    document.getElementById("mriImage").style.filter = "";
+    document.getElementById("brightness").value = 1;
+    document.getElementById("contrast").value = 1;
+}
+function showPatientModal(name, image, date, status, className) {
+    document.getElementById("modalName").innerText = name;
+    document.getElementById("modalDate").innerText = date;
+    document.getElementById("modalStatus").innerText = status;
+    document.getElementById("modalClass").innerText = className;
+    document.getElementById("modalImage").src = "/static/" + image;
+    document.getElementById("patientModal").style.display = "block";
+}
+function closePatientModal() {
+    document.getElementById("patientModal").style.display = "none";
+}
+</script>
+{% endblock %}

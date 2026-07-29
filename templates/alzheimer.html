@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}Alzheimer Test{% endblock %}
+
+{% block content %}
+<style>
+    .form-wrapper {
+        background: var(--card-bg);
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 0 30px rgba(139, 92, 246, 0.2);
+        width: 100%;
+        max-width: 550px;
+        margin: auto;
+        color: var(--text-main);
+        animation: fadeIn 0.7s ease;
+    }
+
+    .form-wrapper h2 {
+        text-align: center;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 30px;
+        color: var(--text-main);
+    }
+
+    .form-wrapper input[type="text"],
+    .form-wrapper input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        margin-top: 6px;
+        border-radius: 10px;
+        background: #374151;
+        border: 1px solid #4b5563;
+        color: #f3f4f6;
+        margin-bottom: 20px;
+    }
+
+    .form-wrapper label {
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+
+    .form-wrapper .btns {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .form-wrapper button,
+    .form-wrapper a {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        flex: 1;
+        transition: background 0.3s ease, transform 0.3s;
+    }
+
+    .form-wrapper button {
+        background: #8b5cf6;
+        color: white;
+    }
+
+    .form-wrapper button:hover {
+        background: #7c3aed;
+        transform: scale(1.02);
+    }
+
+    .form-wrapper a {
+        background: #ef4444;
+        color: white;
+    }
+
+    .form-wrapper a:hover {
+        background: #dc2626;
+        transform: scale(1.02);
+    }
+
+    .info-box {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+        gap: 20px;
+    }
+
+    .info-box .info {
+        flex: 1;
+        background: var(--card-bg);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(255,255,255,0.05);
+        text-align: center;
+    }
+
+    .info strong {
+        color: var(--accent);
+        display: block;
+        margin-top: 8px;
+        font-size: 20px;
+    }
+
+    .result-box {
+        margin-top: 30px;
+        background: #334155;
+        padding: 25px;
+        border-radius: 16px;
+        box-shadow: 0 0 15px rgba(255,255,255,0.05);
+        text-align: center;
+    }
+
+    .result-box img {
+        width: 120px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .result-box h3 {
+        margin-bottom: 10px;
+        color: var(--accent);
+    }
+
+    #regionModal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        display: none;
+        z-index: 9999;
+    }
+
+    #regionModal .modal-content {
+        background: var(--card-bg);
+        margin: 60px auto;
+        max-width: 800px;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    #regionModal img {
+        width: 100%;
+        border-radius: 12px;
+    }
+
+    #regionModal button {
+        margin-top: 20px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    #regionModal button:hover {
+        background: #dc2626;
+    }
+</style>
+
+<div class="info-box">
+    <div class="info">
+        📅 <span>Date:</span>
+        <strong>{{ current_date }}</strong>
+    </div>
+    <div class="info">
+        🧪 <span>Tests Today:</span>
+        <strong>{{ test_count }}</strong>
+    </div>
+</div>
+
+<div class="form-wrapper">
+    <h2>🧠 Alzheimer Test</h2>
+    <form action="/predict_alzheimer" method="POST" enctype="multipart/form-data">
+        <label>First Name</label>
+        <input type="text" name="first_name" required value="{{ first_name or '' }}">
+
+        <label>Last Name</label>
+        <input type="text" name="last_name" required value="{{ last_name or '' }}">
+
+        <label>Upload MRI Image</label>
+        <input type="file" name="image" accept="image/*" required>
+
+        <div class="btns">
+            <button type="submit" name="action" value="detect">Detect</button>
+            <a href="{{ url_for('alzheimer_page') }}">Clear</a>
+        </div>
+    </form>
+
+    {% if prediction %}
+    <div class="result-box">
+        {% if image_url %}
+        <img src="{{ url_for('static', filename=image_url) }}" alt="MRI">
+        {% endif %}
+
+        <h3>🧠 Classification Result:</h3>
+        <h2>{{ prediction }}</h2>
+        <p>
+            {{ first_name }} {{ last_name }} {% if "non" in prediction|lower or "healthy" in prediction|lower %}
+            is <strong style="color:#10b981;">not</strong> affected by Alzheimer's disease.
+            {% else %}
+            is <strong style="color:#ef4444;">affected</strong> by Alzheimer's disease.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+{% if image_url %}
+<!-- MODAL -->
+<div id="regionModal">
+    <div class="modal-content">
+        <h3 style="text-align:center;">🧠 Affected Brain Regions</h3>
+        <img src="{{ url_for('static', filename='results/affected_' + image_url) }}" alt="Affected regions">
+        <button onclick="closeModal()">Close</button>
+    </div>
+</div>
+<script>
+function showModal() {
+    document.getElementById("regionModal").style.display = "block";
+}
+function closeModal() {
+    document.getElementById("regionModal").style.display = "none";
+}
+</script>
+{% endif %}
+{% endblock %}

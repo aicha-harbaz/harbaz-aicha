@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Neuro App{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Fonts & Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --sidebar-gradient: linear-gradient(145deg, #2c1e5c, #3f0a45, #4b2a77, #190b26);
+      --sidebar-hover: rgba(255, 255, 255, 0.12);
+      --sidebar-text: #ffffff;
+      --accent: #ec4899;
+
+      --dashboard-bg: #101010;
+      --card-bg: #2a2e3d;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--dashboard-bg);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* === SIDEBAR === */
+    .sidebar {
+      width: 250px;
+      background: linear-gradient(45deg, #4b2a77, #6a2e8c, #2c1e5c, #190b26);
+      background-size: 300% 300%;
+      animation: waveDark 12s ease infinite;
+      color: white;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      z-index: 1000;
+      border-top-right-radius: 18px;
+      border-bottom-right-radius: 18px;
+      box-shadow: 0 0 20px rgba(124, 58, 237, 0.4), 0 0 40px rgba(92, 51, 168, 0.3);
+      backdrop-filter: blur(6px);
+    }
+
+    .sidebar:hover {
+      box-shadow: 0 0 30px rgba(34, 197, 94, 0.6); /* Glow plus fort au survol */
+    }
+
+    @keyframes waveDark {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 900;
+      margin-bottom: 40px;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
+    }
+
+    .sidebar a {
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 16px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .sidebar a i {
+      margin-right: 10px;
+      font-size: 18px;
+      color: #fcd34d;
+    }
+
+    .sidebar a:hover {
+      background-color: var(--sidebar-hover);
+      transform: translateX(6px);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar a.logout {
+      margin-top: auto;
+      background-color: rgba(255, 255, 255, 0.05);
+      font-weight: bold;
+    }
+
+    /* === MAIN CONTENT === */
+    .main {
+      margin-left: 250px;
+      padding: 40px;
+      flex-grow: 1;
+      background-color: var(--dashboard-bg);
+      color: var(--text-main);
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    h1, h2, h3 {
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    p {
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 200px;
+        padding: 20px;
+      }
+
+      .main {
+        margin-left: 200px;
+        padding: 20px;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+  </style>
+
+  {% block head %}{% endblock %}
+</head>
+
+<body>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <h2>Neuro App</h2>
+
+    <a href="/dashboardparkinson"><i class="fas fa-chart-line"></i> Dashboard</a>
+    <a href="/parkinson"><i class="fas fa-brain"></i> Test</a>
+
+    <a href="/patientss"><i class="fas fa-user-injured"></i> Patient Records</a>
+
+    <hr style="border-color: rgba(255,255,255,0.15); margin: 20px 0;">
+
+    <a href="/" class="logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>
