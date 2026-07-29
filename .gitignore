@@ -16,9 +16,6 @@ env/
 # VS Code
 .vscode/
 
-# Python environment
-.python-version
-
 # Logs
 *.log
 
